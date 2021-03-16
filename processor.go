@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/actapio/moxspec-metrics-agent/rapl"
+	"github.com/moxspec/moxspec-metrics-agent/rapl"
 	"github.com/moxspec/moxspec/cpu"
 	"github.com/moxspec/moxspec/msr"
 )
