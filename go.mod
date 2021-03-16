@@ -1,4 +1,4 @@
-module github.com/actapio/moxspec-metrics-agent
+module github.com/moxspec/moxspec-metrics-agent
 
 go 1.14
 
