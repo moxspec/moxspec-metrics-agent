@@ -43,11 +43,13 @@ $ sudo bin/mox-metrics-agent
 # Quick start
 
 ```
-% bin/mox-metrics-agent -h     
+% bin/mox-metrics-agent -h
 Usage of bin/mox-metrics-agent:
   -d    enable debug logging
   -e string
-        a prometheus remote-write endpoint (default "http://localhost:3030/remote/write")
+        a remote-write endpoint (default "http://localhost:3030/remote/write")
+  -o string
+        output selection (promRemote, jsonHttp, stdout) (default "promRemote")
   -r int
         default retrieval interval (sec) (default 5)
   -s int
