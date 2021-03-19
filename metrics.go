@@ -16,15 +16,15 @@ const (
 )
 
 type metrics struct {
-	name      string
-	labels    map[string]string
-	timestamp time.Time
-	value     float64
+	Name      string            `json:"name"`
+	Labels    map[string]string `json:"labels"`
+	Timestamp time.Time         `json:"timestamp"`
+	Value     float64           `json:"value"`
 }
 
 func (m metrics) flatten() promremote.TimeSeries {
 	var lbl []promremote.Label
-	for k, v := range m.labels {
+	for k, v := range m.Labels {
 		lbl = append(lbl, promremote.Label{Name: k, Value: v})
 	}
 
@@ -35,7 +35,7 @@ func (m metrics) flatten() promremote.TimeSeries {
 	}
 
 	lbl = append(lbl, []promremote.Label{
-		{Name: "__name__", Value: m.name},
+		{Name: "__name__", Value: m.Name},
 		{Name: "instance", Value: hostname},
 		{Name: "job", Value: jobName},
 	}...)
@@ -43,8 +43,8 @@ func (m metrics) flatten() promremote.TimeSeries {
 	return promremote.TimeSeries{
 		Labels: lbl,
 		Datapoint: promremote.Datapoint{
-			Timestamp: m.timestamp,
-			Value:     m.value,
+			Timestamp: m.Timestamp,
+			Value:     m.Value,
 		},
 	}
 }
@@ -63,10 +63,10 @@ func newMetrics(name string, labels map[string]string, val interface{}) (metrics
 	}
 
 	return metrics{
-		name:      getMetricsNameWithPrefix(name),
-		labels:    labels,
-		timestamp: time.Now(),
-		value:     v,
+		Name:      getMetricsNameWithPrefix(name),
+		Labels:    labels,
+		Timestamp: time.Now(),
+		Value:     v,
 	}, nil
 }
 

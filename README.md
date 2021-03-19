@@ -12,13 +12,19 @@ A hardware and kernel metrics collector. OS independent, easy to deploy.
 Any DB that implements Prometheus remote write interface can be used as a backend.
 
 ```
-                  Metrics
-┌─────────────────┐    ┌───────────────┐    ┌────────────┐
-│                 │    │               │    │            │
-│ Hardware/Kernel ├───►│ Metrics Agent ├───►│ Backend DB │
-│                 │    │               │    │            │
-└─────────────────┘    └───────────────┘    └────────────┘
-                              Prometheus Remote Write
+                                Prometheus Remote Write
+                                              ┌────────────┐
+                                              │            │
+                  Metrics                 ┌──►│ Backend DB │
+┌─────────────────┐    ┌───────────────┐  │   │            │
+│                 │    │               │  │   └────────────┘
+│ Hardware/Kernel ├───►│ Metrics Agent ├──┤
+│                 │    │               │  │   ┌────────────┐
+└─────────────────┘    └───────────────┘  │   │            │
+                                          └──►│ Backend DB │
+                                              │            │
+                                              └────────────┘
+                                  JSON over HTTP POST
 ```
 
 # Prerequisites
@@ -43,11 +49,13 @@ $ sudo bin/mox-metrics-agent
 # Quick start
 
 ```
-% bin/mox-metrics-agent -h     
+% bin/mox-metrics-agent -h
 Usage of bin/mox-metrics-agent:
   -d    enable debug logging
   -e string
-        a prometheus remote-write endpoint (default "http://localhost:3030/remote/write")
+        a remote-write endpoint (default "http://localhost:3030/remote/write")
+  -o string
+        output selection (promRemote, jsonHttp, stdout) (default "promRemote")
   -r int
         default retrieval interval (sec) (default 5)
   -s int

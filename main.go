@@ -26,13 +26,15 @@ func init() {
 
 func main() {
 	var (
+		output    string
 		endpoint  string
 		retIntSec int
 		subIntSec int
 		debug     bool
 	)
 
-	flag.StringVar(&endpoint, "e", "http://localhost:3030/remote/write", "a ptometheus remote-write endpoint")
+	flag.StringVar(&output, "o", "promRemote", "output selection (promRemote, jsonHttp, stdout)")
+	flag.StringVar(&endpoint, "e", "http://localhost:3030/remote/write", "a remote-write endpoint")
 	flag.IntVar(&retIntSec, "r", 5, "default retrieval interval (sec)")
 	flag.IntVar(&subIntSec, "s", 10, "default submission interval (sec)")
 	flag.BoolVar(&debug, "d", false, "enable debug logging")
@@ -42,10 +44,15 @@ func main() {
 		w   writer
 		err error
 	)
-	if endpoint == "local" {
+	switch output {
+	case "promRemote":
+		w, err = newPromRemoteWriter(endpoint)
+	case "jsonHttp":
+		w, err = newJSONHTTPWriter(endpoint)
+	case "stdout":
 		w, err = newLocalWriter(endpoint)
-	} else {
-		w, err = newRemoteWriter(endpoint)
+	default:
+		w, err = newLocalWriter(endpoint)
 	}
 	if err != nil {
 		log.Fatal(err)

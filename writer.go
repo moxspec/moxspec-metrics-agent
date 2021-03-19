@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/m3db/prometheus_remote_client_golang/promremote"
@@ -21,16 +24,16 @@ func encodeMetricsList(mList []metrics) []promremote.TimeSeries {
 	return tsList
 }
 
-type remoteWriter struct {
+type promRemoteWriter struct {
 	cli promremote.Client
 }
 
-func (r remoteWriter) writeTimeSeries(ctx context.Context, mList []metrics) error {
+func (p promRemoteWriter) writeTimeSeries(ctx context.Context, mList []metrics) error {
 	tsList := encodeMetricsList(mList)
 	headers := make(map[string]string)
 
 	log.Debugf("writing %d metrics", len(tsList))
-	result, err := r.cli.WriteTimeSeries(ctx, tsList, promremote.WriteOptions{Headers: headers})
+	result, err := p.cli.WriteTimeSeries(ctx, tsList, promremote.WriteOptions{Headers: headers})
 	if err != nil {
 		// Policy: No Retry
 		return errors.Wrap(err, fmt.Sprintf("status code: %d", result.StatusCode))
@@ -39,7 +42,7 @@ func (r remoteWriter) writeTimeSeries(ctx context.Context, mList []metrics) erro
 	return nil
 }
 
-func newRemoteWriter(endpoint string) (*remoteWriter, error) {
+func newPromRemoteWriter(endpoint string) (*promRemoteWriter, error) {
 	cfg := promremote.NewConfig(
 		promremote.WriteURLOption(endpoint),
 		promremote.HTTPClientTimeoutOption(30*time.Second),
@@ -49,7 +52,7 @@ func newRemoteWriter(endpoint string) (*remoteWriter, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to construct client: %v")
 	}
-	return &remoteWriter{
+	return &promRemoteWriter{
 		cli: client,
 	}, nil
 }
@@ -100,4 +103,38 @@ func (l localWriter) writeTimeSeries(ctx context.Context, mList []metrics) error
 
 func newLocalWriter(endpoint string) (*localWriter, error) {
 	return &localWriter{}, nil
+}
+
+type jsonHTTPWriter struct {
+	cli      *http.Client
+	endpoint string
+}
+
+func (j jsonHTTPWriter) writeTimeSeries(ctx context.Context, mList []metrics) error {
+	bod, err := json.Marshal(mList)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequestWithContext(ctx, "POST", j.endpoint, bytes.NewReader(bod))
+	req.Header.Add("Content-Type", "application/json")
+	if err != nil {
+		return err
+	}
+	res, err := j.cli.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("status: %d", res.StatusCode)
+	}
+	return nil
+}
+
+func newJSONHTTPWriter(endpoint string) (*jsonHTTPWriter, error) {
+	return &jsonHTTPWriter{
+		cli:      &http.Client{},
+		endpoint: endpoint,
+	}, nil
 }

@@ -46,7 +46,7 @@ func TestNewMetrics(t *testing.T) {
 	}{
 		{"", nil, 0, metrics{}, true},
 		{"test", nil, 0, metrics{}, true},
-		{"test", tLabel, 1.0, metrics{name: getMetricsNameWithPrefix("test"), labels: tLabel, value: 1.0}, false},
+		{"test", tLabel, 1.0, metrics{Name: getMetricsNameWithPrefix("test"), Labels: tLabel, Value: 1.0}, false},
 	}
 
 	for _, test := range tests {
@@ -54,7 +54,7 @@ func TestNewMetrics(t *testing.T) {
 
 		t.Run(fmt.Sprintf("%+v", tt), func(t *testing.T) {
 			got, err = newMetrics(tt.name, tt.labels, tt.val)
-			isSameVal := (got.name == tt.ex.name && reflect.DeepEqual(got.labels, tt.ex.labels) && got.value == tt.ex.value)
+			isSameVal := (got.Name == tt.ex.Name && reflect.DeepEqual(got.Labels, tt.ex.Labels) && got.Value == tt.ex.Value)
 			if err == nil && tt.wantsError || err != nil && !tt.wantsError || !isSameVal {
 				t.Errorf("test: %+v, got: %v (err: %s), expect: %v (wantsError: %t)", tt, got, err, tt.ex, tt.wantsError)
 			}
