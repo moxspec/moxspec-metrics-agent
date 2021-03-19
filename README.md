@@ -12,13 +12,19 @@ A hardware and kernel metrics collector. OS independent, easy to deploy.
 Any DB that implements Prometheus remote write interface can be used as a backend.
 
 ```
-                  Metrics
-┌─────────────────┐    ┌───────────────┐    ┌────────────┐
-│                 │    │               │    │            │
-│ Hardware/Kernel ├───►│ Metrics Agent ├───►│ Backend DB │
-│                 │    │               │    │            │
-└─────────────────┘    └───────────────┘    └────────────┘
-                              Prometheus Remote Write
+                                Prometheus Remote Write
+                                              ┌────────────┐
+                                              │            │
+                  Metrics                 ┌──►│ Backend DB │
+┌─────────────────┐    ┌───────────────┐  │   │            │
+│                 │    │               │  │   └────────────┘
+│ Hardware/Kernel ├───►│ Metrics Agent ├──┤
+│                 │    │               │  │   ┌────────────┐
+└─────────────────┘    └───────────────┘  │   │            │
+                                          └──►│ Backend DB │
+                                              │            │
+                                              └────────────┘
+                                  JSON over HTTP POST
 ```
 
 # Prerequisites
