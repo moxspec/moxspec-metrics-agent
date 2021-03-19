@@ -10,10 +10,10 @@ func TestDryrun(t *testing.T) {
 	dummyRep := func() ([]metrics, error) {
 		return []metrics{
 			{
-				name:      "dummy",
-				labels:    map[string]string{"dummy": "dummy"},
-				timestamp: time.Now(),
-				value:     0.1,
+				Name:      "dummy",
+				Labels:    map[string]string{"dummy": "dummy"},
+				Timestamp: time.Now(),
+				Value:     0.1,
 			},
 		}, nil
 	}
