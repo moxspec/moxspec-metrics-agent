@@ -8,47 +8,47 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/m3db/prometheus_remote_client_golang/promremote"
+	"github.com/moxspec/moxspec-metrics-agent/promcli"
 	"github.com/pkg/errors"
+	"github.com/prometheus/prometheus/prompb"
 )
 
 type writer interface {
 	writeTimeSeries(ctx context.Context, mList []metrics) error
 }
 
-func encodeMetricsList(mList []metrics) []promremote.TimeSeries {
-	var tsList []promremote.TimeSeries
+func encodeMetricsList(mList []metrics) []prompb.TimeSeries {
+	tsList := make([]prompb.TimeSeries, len(mList))
 	for _, m := range mList {
-		tsList = append(tsList, m.flatten())
+		ts := m.flatten()
+		tsList = append(tsList, ts)
 	}
 	return tsList
 }
 
 type promRemoteWriter struct {
-	cli promremote.Client
+	cli promcli.Client
 }
 
 func (p promRemoteWriter) writeTimeSeries(ctx context.Context, mList []metrics) error {
 	tsList := encodeMetricsList(mList)
-	headers := make(map[string]string)
+
+	promReq := prompb.WriteRequest{
+		Timeseries: tsList,
+	}
 
 	log.Debugf("writing %d metrics", len(tsList))
-	result, err := p.cli.WriteTimeSeries(ctx, tsList, promremote.WriteOptions{Headers: headers})
+	status, err := p.cli.Write(ctx, promReq)
 	if err != nil {
 		// Policy: No Retry
-		return errors.Wrap(err, fmt.Sprintf("status code: %d", result.StatusCode))
+		return errors.Wrap(err, fmt.Sprintf("status code: %d", status))
 	}
-	log.Infof("remote write: status code = %d", result.StatusCode)
+	log.Infof("remote write: status code = %d", status)
 	return nil
 }
 
 func newPromRemoteWriter(endpoint string) (*promRemoteWriter, error) {
-	cfg := promremote.NewConfig(
-		promremote.WriteURLOption(endpoint),
-		promremote.HTTPClientTimeoutOption(30*time.Second),
-	)
-
-	client, err := promremote.NewClient(cfg)
+	client, err := promcli.NewClient(endpoint)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to construct client: %v")
 	}

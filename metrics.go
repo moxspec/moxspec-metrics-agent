@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/m3db/prometheus_remote_client_golang/promremote"
 	"github.com/moxspec/moxspec/util"
+	"github.com/prometheus/prometheus/prompb"
 )
 
 const (
@@ -22,10 +22,10 @@ type metrics struct {
 	Value     float64           `json:"value"`
 }
 
-func (m metrics) flatten() promremote.TimeSeries {
-	var lbl []promremote.Label
+func (m metrics) flatten() prompb.TimeSeries {
+	lbl := []prompb.Label{}
 	for k, v := range m.Labels {
-		lbl = append(lbl, promremote.Label{Name: k, Value: v})
+		lbl = append(lbl, prompb.Label{Name: k, Value: v})
 	}
 
 	hostname, err := os.Hostname()
@@ -34,17 +34,19 @@ func (m metrics) flatten() promremote.TimeSeries {
 		hostname = "localhost"
 	}
 
-	lbl = append(lbl, []promremote.Label{
+	lbl = append(lbl, []prompb.Label{
 		{Name: "__name__", Value: m.Name},
 		{Name: "instance", Value: hostname},
 		{Name: "job", Value: jobName},
 	}...)
 
-	return promremote.TimeSeries{
+	return prompb.TimeSeries{
 		Labels: lbl,
-		Datapoint: promremote.Datapoint{
-			Timestamp: m.Timestamp,
-			Value:     m.Value,
+		Samples: []prompb.Sample{
+			{
+				Timestamp: m.Timestamp.UnixNano() / int64(time.Millisecond),
+				Value:     m.Value,
+			},
 		},
 	}
 }
