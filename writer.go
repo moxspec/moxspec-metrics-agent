@@ -18,13 +18,23 @@ type writer interface {
 	setAuth(user, pass string)
 }
 
-func encodeMetricsList(mList []metrics) []prompb.TimeSeries {
+func encodeMetricsList(mList []metrics) ([]prompb.TimeSeries, []prompb.MetricMetadata) {
 	tsList := make([]prompb.TimeSeries, len(mList))
+	mdList := make([]prompb.MetricMetadata, len(mList))
+
 	for _, m := range mList {
 		ts := m.flatten()
 		tsList = append(tsList, ts)
+		mdList = append(mdList, promMetricMetadata())
 	}
-	return tsList
+	return tsList, mdList
+}
+
+func promMetricMetadata() prompb.MetricMetadata {
+	return prompb.MetricMetadata{
+		Type:             prompb.MetricMetadata_GAUGE,
+		MetricFamilyName: prompb.MetricMetadata_GAUGE.String(),
+	}
 }
 
 type promRemoteWriter struct {
@@ -32,10 +42,11 @@ type promRemoteWriter struct {
 }
 
 func (p promRemoteWriter) writeTimeSeries(ctx context.Context, mList []metrics) error {
-	tsList := encodeMetricsList(mList)
+	tsList, _ := encodeMetricsList(mList)
 
 	promReq := prompb.WriteRequest{
 		Timeseries: tsList,
+		//Metadata:   mdList,
 	}
 
 	log.Debugf("writing %d metrics", len(tsList))
@@ -101,7 +112,7 @@ type localWriter struct {
 }
 
 func (l localWriter) writeTimeSeries(ctx context.Context, mList []metrics) error {
-	tsList := encodeMetricsList(mList)
+	tsList, _ := encodeMetricsList(mList)
 	log.Debugf("%+v", tsList)
 	return nil
 }
