@@ -15,6 +15,7 @@ import (
 
 type writer interface {
 	writeTimeSeries(ctx context.Context, mList []metrics) error
+	setAuth(user, pass string)
 }
 
 func encodeMetricsList(mList []metrics) []prompb.TimeSeries {
@@ -45,6 +46,10 @@ func (p promRemoteWriter) writeTimeSeries(ctx context.Context, mList []metrics) 
 	}
 	log.Infof("remote write: status code = %d", status)
 	return nil
+}
+
+func (p *promRemoteWriter) setAuth(user, pass string) {
+	p.cli.SetAuth(user, pass)
 }
 
 func newPromRemoteWriter(endpoint string) (*promRemoteWriter, error) {
@@ -101,6 +106,9 @@ func (l localWriter) writeTimeSeries(ctx context.Context, mList []metrics) error
 	return nil
 }
 
+func (l localWriter) setAuth(user, pass string) {
+}
+
 func newLocalWriter(endpoint string) (*localWriter, error) {
 	return &localWriter{}, nil
 }
@@ -130,6 +138,9 @@ func (j jsonHTTPWriter) writeTimeSeries(ctx context.Context, mList []metrics) er
 		return fmt.Errorf("status: %d", res.StatusCode)
 	}
 	return nil
+}
+
+func (j jsonHTTPWriter) setAuth(user, pass string) {
 }
 
 func newJSONHTTPWriter(endpoint string) (*jsonHTTPWriter, error) {

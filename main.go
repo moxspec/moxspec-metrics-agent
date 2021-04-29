@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"math"
+	"os"
 	"sync"
 	"time"
 
@@ -30,6 +31,8 @@ func main() {
 		endpoint  string
 		retIntSec int
 		subIntSec int
+		authUser  string
+		authPass  string
 		debug     bool
 	)
 
@@ -39,6 +42,9 @@ func main() {
 	flag.IntVar(&subIntSec, "s", 10, "default submission interval (sec)")
 	flag.BoolVar(&debug, "d", false, "enable debug logging")
 	flag.Parse()
+
+	authUser = os.Getenv("MOXSPEC_AUTH_USER")
+	authPass = os.Getenv("MOXSPEC_AUTH_PASS")
 
 	var (
 		w   writer
@@ -56,6 +62,11 @@ func main() {
 	}
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if authUser != "" && authPass != "" {
+		log.Info("auth info set")
+		w.setAuth(authUser, authPass)
 	}
 
 	if retIntSec < 1 {

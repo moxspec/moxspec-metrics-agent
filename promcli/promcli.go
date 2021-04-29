@@ -19,6 +19,8 @@ const (
 // Client represents remote writer
 type Client struct {
 	endPoint string
+	user     string
+	pass     string
 	timeout  time.Duration
 	httpCli  *http.Client
 }
@@ -29,6 +31,12 @@ func NewClient(ep string) (Client, error) {
 		endPoint: ep,
 		httpCli:  http.DefaultClient,
 	}, nil
+}
+
+// SetAuth stores http basic auth credentials
+func (c *Client) SetAuth(user, pass string) {
+	c.user = user
+	c.pass = pass
 }
 
 // Write writes prometheus request to the remote write endpoint
@@ -47,6 +55,7 @@ func (c Client) Write(ctx context.Context, promReq prompb.WriteRequest) (int, er
 	req.Header.Set("Content-Type", "application/x-protobuf")
 	req.Header.Set("User-Agent", useragent)
 	req.Header.Set("X-Prometheus-Remote-Write-Version", "0.1.0")
+	req.SetBasicAuth(c.user, c.pass)
 
 	// post data
 	resp, err := c.httpCli.Do(req)
